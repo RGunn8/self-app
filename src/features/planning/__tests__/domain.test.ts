@@ -195,3 +195,21 @@ describe('planningPrompt', () => {
     expect(planningPrompt(thursday, data({ plans: [session('run', addDays(thursday, -2)), session('stretch', thursday)] }))).toBeNull();
   });
 });
+
+describe('archived identities', () => {
+  const archived = [{ id: 'runner', name: 'Runner', accent: 'runner', archivedAt: 1 }];
+
+  it('hides their intentions and sessions everywhere, including reminders', () => {
+    const plans = [intention('Call coach', wed, { time: '18:00' }), session('run', wed, '19:00')];
+    const d = data({ plans, identities: archived });
+    expect(dayPlan(wed, d)).toEqual([]);
+    const now = parseDay(wed);
+    now.setHours(8);
+    expect(remindersToSchedule(d, now)).toEqual([]);
+  });
+
+  it('they come back on unarchive', () => {
+    const plans = [intention('Call coach', wed)];
+    expect(dayPlan(wed, data({ plans }))).toHaveLength(1);
+  });
+});

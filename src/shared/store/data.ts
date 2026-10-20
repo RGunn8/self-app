@@ -1,6 +1,7 @@
 // In-memory snapshot of the local database, reloaded whenever SQLite reports a write.
 // Screens select from it and derive scores with the pure functions in each feature’s domain.ts.
 import { isNull } from 'drizzle-orm';
+import { AppState } from 'react-native';
 import { create } from 'zustand';
 
 import { identities, type Identity, pauses, type Pause } from '@/features/identities/model';
@@ -12,10 +13,13 @@ import { type Settings } from '@/features/settings/model';
 import { DEFAULT_SETTINGS, settingsRepo } from '@/features/settings/repo';
 import { systemCompletions, type SystemCompletion, systemIdentities, type SystemIdentity, systems, type System, systemSteps, type SystemStep } from '@/features/systems/model';
 import { db, onDatabaseChange } from '@/shared/db/client';
+import { today } from '@/shared/lib/dates';
 
 export interface Snapshot {
   ready: boolean;
   version: number;
+  /** Today's day key when the snapshot was loaded; changes at midnight and on returning to the app. */
+  day: string;
   identities: Identity[];
   metrics: Metric[];
   links: IdentityMetric[];
@@ -35,6 +39,7 @@ export interface Snapshot {
 const empty: Snapshot = {
   ready: false,
   version: 0,
+  day: today(),
   identities: [],
   metrics: [],
   links: [],
@@ -95,7 +100,36 @@ export function loadSnapshot(tables?: Iterable<string>) {
   if (tables && names.length === 0) return;
   const patch: Partial<Snapshot> = {};
   for (const t of names) Object.assign(patch, loaders[t]());
-  useData.setState((s) => ({ ...patch, ready: true, version: s.version + 1 }));
+  useData.setState((s) => ({ ...patch, ready: true, version: s.version + 1, day: today() }));
+}
+
+let dayTimer: ReturnType<typeof setTimeout> | null = null;
+let appState: { remove: () => void } | null = null;
+
+/** Reload everything when the date changes, so "today" is never yesterday on screen. */
+function checkDay() {
+  if (useData.getState().day !== today()) loadSnapshot();
+}
+
+function armMidnight() {
+  if (dayTimer) clearTimeout(dayTimer);
+  const next = new Date();
+  next.setHours(24, 0, 1, 0);
+  dayTimer = setTimeout(() => {
+    checkDay();
+    armMidnight();
+  }, next.getTime() - Date.now());
+}
+
+function watchDay() {
+  armMidnight();
+  appState?.remove();
+  appState = AppState.addEventListener('change', (state) => {
+    if (state !== 'active') return;
+    checkDay();
+    // Timers don't run while suspended; re-arm for the right midnight.
+    armMidnight();
+  });
 }
 
 let timer: ReturnType<typeof setTimeout> | null = null;
@@ -105,6 +139,7 @@ let unsubscribe: (() => void) | null = null;
 /** Start listening for writes. Bursts (a transaction) collapse into one reload of the tables they touched. */
 export function startDataSync() {
   loadSnapshot();
+  watchDay();
   unsubscribe?.();
   unsubscribe = onDatabaseChange((table) => {
     pending.add(table);

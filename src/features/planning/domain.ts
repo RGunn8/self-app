@@ -38,13 +38,17 @@ const doneOn = (data: Pick<PlanData, 'completions'>, systemId: string, day: stri
  * undoing the completion puts the plan back; intentions carry their own status.
  */
 export function planItem(plan: Plan, data: PlanData): PlanItem | null {
+  const live = (id: string) => data.identities.some((i) => i.id === id && i.archivedAt === null);
   if (plan.kind === 'system') {
     const system = data.systems.find((s) => s.id === plan.systemId);
     if (!system) return null;
+    // Sessions of a system that only serves archived identities are hidden, and come back on unarchive.
+    const identityIds = systemIdentityIds(data, system.id).filter(live);
+    if (identityIds.length === 0) return null;
     const status: PlanStatus = doneOn(data, system.id, plan.day) ? 'done' : plan.status === 'skipped' ? 'skipped' : 'planned';
-    return { plan, kind: 'system', title: system.name, identityIds: systemIdentityIds(data, system.id), time: plan.time, status };
+    return { plan, kind: 'system', title: system.name, identityIds, time: plan.time, status };
   }
-  const identity = data.identities.find((i) => i.id === plan.identityId);
+  const identity = data.identities.find((i) => i.id === plan.identityId && i.archivedAt === null);
   if (!identity) return null;
   return { plan, kind: 'intention', title: plan.title ?? '', identityIds: [identity.id], time: plan.time, status: plan.status };
 }
