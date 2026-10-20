@@ -3,13 +3,14 @@
 import { randomUUID } from 'expo-crypto';
 
 import { identities, identityPriorityHistory } from '@/features/identities/model';
+import { plans } from '@/features/planning/model';
 import { entries } from '@/features/logging/model';
 import { identityMetrics, metrics } from '@/features/metrics/model';
 import type { MetricInput } from '@/features/metrics/repo';
 import { systemCompletions, systemIdentities, systems, systemSteps } from '@/features/systems/model';
 import { DATA_TABLES } from '@/shared/db/backup';
 import { db, sqlite } from '@/shared/db/client';
-import { addDays, daysBetween, parseDay, today } from '@/shared/lib/dates';
+import { addDays, daysBetween, parseDay, today, weekStart } from '@/shared/lib/dates';
 
 
 export function clearAll() {
@@ -128,8 +129,11 @@ export function seedDemo() {
       { name: 'Strength circuit', cue: 'Monday and Friday, 7 AM', frequency: 'weekly' as const, timesPerWeek: 2, steps: [['Mobility warm-up', null], ['Circuit × 3', 'strength']], identities: ['runner'], days: [1, 5], rate: 0.55 },
       { name: 'Wind-down', cue: 'When the 9:30 PM alarm goes off', frequency: 'daily' as const, timesPerWeek: 7, steps: [['Phone on the charger in the kitchen', 'phoneFree'], ['Read for 20 minutes', 'reading'], ['Lights out by 10:30', null]], identities: ['runner', 'parent', 'writer'], days: [0, 1, 2, 3, 4, 5, 6], rate: 0.6 },
     ];
+    const sysIds: Record<string, string> = {};
+    const doneDays = new Set<string>();
     for (const s of sys) {
       const sid = randomUUID();
+      sysIds[s.name] = sid;
       tx.insert(systems).values({ id: sid, createdAt, updatedAt: now, deletedAt: null, name: s.name, description: null, cue: s.cue, frequency: s.frequency, timesPerWeek: s.timesPerWeek }).run();
       s.steps.forEach(([name, m], position) =>
         tx.insert(systemSteps).values({ ...base(), systemId: sid, name: name as string, position, metricId: m ? mid[m] : null }).run(),
@@ -138,8 +142,34 @@ export function seedDemo() {
       for (const day of daysBetween(addDays(end, -60), addDays(end, -1))) {
         if (s.days.includes(parseDay(day).getDay()) && rand() < s.rate) {
           tx.insert(systemCompletions).values({ ...base(), systemId: sid, date: day }).run();
+          doneDays.add(`${sid}:${day}`);
         }
       }
     }
+
+    // Plans: last week and this week of sessions on each system's usual days, plus a few intentions.
+    const plan = (day: string, time: string | null, more: Partial<typeof plans.$inferInsert>, position = 0) =>
+      tx.insert(plans)
+        .values({ ...base(), day, time, kind: 'system', systemId: null, identityId: null, title: null, metricId: null, amount: null, status: 'planned', entryId: null, position, ...more })
+        .run();
+    const times: Record<string, string> = { 'Run days': '07:00', 'Strength circuit': '07:00', 'Wind-down': '21:30' };
+    for (const day of daysBetween(addDays(weekStart(end), -7), addDays(weekStart(end), 6))) {
+      for (const s of sys) {
+        if (!s.days.includes(parseDay(day).getDay())) continue;
+        const sid = sysIds[s.name];
+        // A past session that didn't happen is sometimes a conscious "not today".
+        const skipped = day < end && !doneDays.has(`${sid}:${day}`) && rand() < 0.4;
+        plan(day, times[s.name], { kind: 'system', systemId: sid, status: skipped ? 'skipped' : 'planned' });
+      }
+    }
+    const intention = (day: string, time: string | null, identity: string, title: string, status: 'planned' | 'done' = 'planned', metric?: { key: string; amount: number }) =>
+      plan(day, time, { kind: 'intention', identityId: ids[identity], title, status, metricId: metric ? mid[metric.key] : null, amount: metric?.amount ?? null }, 1);
+    intention(addDays(end, -6), null, 'financial', 'Review this month’s subscriptions', 'done');
+    intention(addDays(end, -3), '18:00', 'parent', 'Bike ride with Leo', 'done');
+    intention(addDays(end, -1), null, 'musician', 'Learn the bridge of “Blackbird”', 'done');
+    intention(addDays(end, -1), '20:00', 'writer', 'Outline chapter 4');
+    intention(end, '13:00', 'parent', 'Call mom after lunch');
+    intention(end, null, 'writer', 'Draft the opening scene', 'planned', { key: 'words', amount: 500 });
+    intention(addDays(end, 1), '17:30', 'parent', 'Pick Leo up and go to the park');
   });
 }
