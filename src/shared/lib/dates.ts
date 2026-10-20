@@ -37,6 +37,23 @@ export function weekStart(key: string): string {
   return addDays(key, -dow);
 }
 
+/** First day of the key's month. */
+export function monthStart(key: string): string {
+  return `${key.slice(0, 8)}01`;
+}
+
+/** First day of the month `n` months from the key's month. */
+export function addMonths(key: string, n: number): string {
+  const d = parseDay(monthStart(key));
+  d.setMonth(d.getMonth() + n);
+  return dayKey(d);
+}
+
+/** Last day of the key's month. */
+export function monthEnd(key: string): string {
+  return addDays(addMonths(key, 1), -1);
+}
+
 export function today(): string {
   return dayKey(new Date());
 }
@@ -44,6 +61,11 @@ export function today(): string {
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const DOW_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/** Column headers for Monday-first weeks: M T W T F S S. */
+export const WEEKDAY_INITIALS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'] as const;
+/** The weekday letter for a day key. */
+export const weekdayInitial = (key: string) => WEEKDAY_INITIALS[(parseDay(key).getDay() + 6) % 7];
 const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 export const fmt = {
@@ -72,6 +94,21 @@ export const fmt = {
     return `${MONTHS_LONG[d.getMonth()]} ${d.getFullYear()}`;
   },
   month: (key: string) => MONTHS_LONG[parseDay(key).getMonth()],
+  /** October 2026 */
+  monthKey: (key: string) => {
+    const d = parseDay(key);
+    return `${MONTHS_LONG[d.getMonth()]} ${d.getFullYear()}`;
+  },
+  /** Sep 29 – Oct 5, Sep 22 – 28, or Nov 2025 – Oct 2026 across years. */
+  span: (from: string, to: string) => {
+    const a = parseDay(from);
+    const b = parseDay(to);
+    if (a.getFullYear() !== b.getFullYear()) {
+      return `${MONTHS[a.getMonth()]} ${a.getFullYear()} – ${MONTHS[b.getMonth()]} ${b.getFullYear()}`;
+    }
+    const end = a.getMonth() === b.getMonth() ? `${b.getDate()}` : `${MONTHS[b.getMonth()]} ${b.getDate()}`;
+    return `${MONTHS[a.getMonth()]} ${a.getDate()} – ${end}`;
+  },
   time: (ms: number) => {
     const d = new Date(ms);
     const h = d.getHours();

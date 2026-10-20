@@ -1,6 +1,6 @@
 import { useColorScheme } from 'react-native';
 
-import { useSettings } from '@/stores/settings';
+import { useSettings } from '@/features/settings/useSettings';
 import {
   colors,
   darkColors,
@@ -12,7 +12,7 @@ import {
   radius,
   space,
   type,
-} from './tokens';
+} from '@/shared/theme/tokens';
 
 export { colors, elevation, fonts, identityAccents, layout, radius, space, type };
 

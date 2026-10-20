@@ -1,8 +1,8 @@
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { addDatabaseChangeListener, openDatabaseSync } from 'expo-sqlite';
 
-import { migrations } from './migrations';
-import * as schema from './schema';
+import { migrations } from '@/shared/db/migrations';
+import * as schema from '@/shared/db/schema';
 
 export const DB_NAME = 'identity.db';
 
@@ -23,8 +23,8 @@ export async function migrate() {
   }
 }
 
-/** Subscribe to any write. Used to re-run derived queries. */
-export function onDatabaseChange(cb: () => void) {
-  const sub = addDatabaseChangeListener(cb);
+/** Subscribe to any write, with the table it touched. Used to re-run derived queries. */
+export function onDatabaseChange(cb: (table: string) => void) {
+  const sub = addDatabaseChangeListener((e) => cb(e.tableName));
   return () => sub.remove();
 }

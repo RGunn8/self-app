@@ -26,4 +26,21 @@ export const migrations: string[] = [
   CREATE INDEX identity_metrics_metric ON identity_metrics (metric_id);
   CREATE INDEX system_completions_system ON system_completions (system_id, date);
   `,
+  // 2: Restart an identity. Identity-level numbers count from this day; history is kept.
+  `ALTER TABLE identities ADD COLUMN restarted_at TEXT;`,
+  // 3: Planning. Plans expire with their day; reminders are opt-in.
+  `
+  CREATE TABLE plans (${base}, day TEXT NOT NULL, time TEXT, kind TEXT NOT NULL, system_id TEXT, identity_id TEXT,
+    title TEXT, metric_id TEXT, amount REAL, status TEXT NOT NULL, entry_id TEXT, position INTEGER NOT NULL);
+  CREATE INDEX plans_day ON plans (day);
+  ALTER TABLE settings ADD COLUMN plan_reminders INTEGER NOT NULL DEFAULT 0;
+  `,
+  // 4: Which tab the app opens on. Identities by default; planners can start on Today.
+  `ALTER TABLE settings ADD COLUMN start_tab TEXT NOT NULL DEFAULT 'identities';`,
+  // 5: Planning is optional. Off hides Today, prompts and reminders; plans are kept.
+  `ALTER TABLE settings ADD COLUMN planning_enabled INTEGER NOT NULL DEFAULT 1;`,
+  // 6: How many plans make a full day. Past it, a gentle hint; never a block.
+  `ALTER TABLE settings ADD COLUMN day_plan_limit INTEGER NOT NULL DEFAULT 6;`,
+  // 7: The optional day score. Off for existing users; asked during onboarding.
+  `ALTER TABLE settings ADD COLUMN day_score_enabled INTEGER NOT NULL DEFAULT 0;`,
 ];

@@ -2,27 +2,19 @@
 // Dev-only: Settings › "Load demo data".
 import { randomUUID } from 'expo-crypto';
 
-import { entries, identities, identityMetrics, identityPriorityHistory, metrics, systemCompletions, systemIdentities, systems, systemSteps } from './schema';
-import { db, sqlite } from './client';
-import type { MetricInput } from '@/repos';
-import { addDays, daysBetween, parseDay, today } from '@/lib/dates';
+import { identities, identityPriorityHistory } from '@/features/identities/model';
+import { entries } from '@/features/logging/model';
+import { identityMetrics, metrics } from '@/features/metrics/model';
+import type { MetricInput } from '@/features/metrics/repo';
+import { systemCompletions, systemIdentities, systems, systemSteps } from '@/features/systems/model';
+import { DATA_TABLES } from '@/shared/db/backup';
+import { db, sqlite } from '@/shared/db/client';
+import { addDays, daysBetween, parseDay, today } from '@/shared/lib/dates';
 
-const TABLES = [
-  'identities',
-  'identity_priority_history',
-  'pauses',
-  'metrics',
-  'identity_metrics',
-  'entries',
-  'systems',
-  'system_steps',
-  'system_identities',
-  'system_completions',
-];
 
 export function clearAll() {
   sqlite.withTransactionSync(() => {
-    for (const t of TABLES) sqlite.runSync(`DELETE FROM ${t}`);
+    for (const t of DATA_TABLES) sqlite.runSync(`DELETE FROM ${t}`);
   });
 }
 
