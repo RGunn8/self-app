@@ -1,0 +1,14 @@
+# Run in this order; 00 resets to Maya's demo data so every run starts from the same state.
+flows:
+  - "*.yaml"
+executionOrder:
+  continueOnFailure: true
+  flowsOrder:
+    - 00-reset-demo
+    - 01-identities
+    - 02-today
+    - 03-plan-day
+    - 04-plan-week
+    - 05-log-calendar
+    - 06-week-review
+    - 07-settings

@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Entry } from '@/features/logging/model';
 import { entriesRepo } from '@/features/logging/repo';
-import { formatValue } from '@/features/metrics/domain';
+import { formatAmount } from '@/features/metrics/domain';
 import { toast } from '@/shared/components/toast';
 import { Button, Chip, EmptyState, NavHeader, Row } from '@/shared/components/ui';
 import { addDays, dayKey, daysBetween, fmt, today } from '@/shared/lib/dates';
@@ -135,7 +135,7 @@ export default function EntriesScreen() {
                 className="flex-row items-center p-4 rounded-md bg-card">
                 <View className="flex-1">
                   <Text className="font-body-bold text-ink text-[18px] leading-[22px]">
-                    {formatValue(item.entry.value)} {metric.unit}
+                    {formatAmount(item.entry.value, metric.unit)}
                   </Text>
                   <Text className="font-body text-caption text-muted">
                     {item.entry.systemCompletionId ? 'System' : 'Manual'} · {fmt.time(item.entry.loggedAt)}

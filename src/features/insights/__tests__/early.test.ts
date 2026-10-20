@@ -29,13 +29,13 @@ describe('earlyObservations', () => {
   it('picks the best week once there are two weeks', () => {
     expect(texts([e('2026-09-14', 3), e('2026-09-15', 4)]).some((t) => t.includes('best run week'))).toBe(false);
     expect(texts([e('2026-09-07', 3), e('2026-09-14', 3), e('2026-09-15', 4)])).toContain(
-      'Your best run week so far: 7.0 mi, the week of Sep 14.',
+      'Your best run week so far: 7 mi, the week of Sep 14.',
     );
   });
 
   it('notes the personal best after 5 entries', () => {
     const five = [e('2026-09-01', 2), e('2026-09-03', 6), e('2026-09-05', 3), e('2026-09-08', 4), e('2026-09-10', 1)];
-    expect(texts(five)).toContain('Your best run so far: 6.0 mi on Sep 3.');
+    expect(texts(five)).toContain('Your best run so far: 6 mi on Sep 3.');
     expect(texts(five.slice(0, 4)).some((t) => t.startsWith('Your best run so far'))).toBe(false);
   });
 });

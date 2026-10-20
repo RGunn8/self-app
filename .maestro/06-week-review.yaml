@@ -1,0 +1,19 @@
+# Weekly review: identities, daily wins, plans kept and planning next week.
+appId: com.ryangunn.identitydashboard
+---
+- runFlow: subflows/home.yaml
+- openLink: identity:///week/latest
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+- extendedWaitUntil:
+    visible: "Your week"
+    timeout: 5000
+- takeScreenshot: 06-week-review
+- scrollUntilVisible:
+    element: "Open dashboard"
+    direction: DOWN
+- takeScreenshot: 06b-week-review-end
+- tapOn: "Close"

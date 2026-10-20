@@ -219,10 +219,22 @@ export function remindersToSchedule(data: PlanData, now: Date): Reminder[] {
   return out.sort((a, b) => a.at.getTime() - b.at.getTime()).slice(0, MAX_REMINDERS);
 }
 
-/** "7:00 AM" from "07:00". */
+/** "7:00 AM" from "07:00". The no-break space keeps "AM"/"PM" with the time when text wraps. */
 export function formatTime(time: string): string {
   const [h, m] = time.split(':').map(Number);
-  return `${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+  return `${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, '0')}\u00A0${h < 12 ? 'AM' : 'PM'}`;
+}
+
+/**
+ * What's next among a day's open plans at `now` (HH:mm): the next timed plan still ahead,
+ * else an anytime one, else the earliest one whose time has passed (shown as "from earlier").
+ */
+export function nextUp(open: PlanItem[], now: string): { item: PlanItem; earlier: boolean } | null {
+  const ahead = open.find((i) => i.time !== null && i.time >= now);
+  if (ahead) return { item: ahead, earlier: false };
+  const anytime = open.find((i) => i.time === null);
+  if (anytime) return { item: anytime, earlier: false };
+  return open[0] ? { item: open[0], earlier: true } : null;
 }
 
 /** Prompts appear for people who planned within this many days; they fade if planning stops. */

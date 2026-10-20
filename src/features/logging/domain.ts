@@ -52,10 +52,12 @@ export function logByDay(data: LogData, identityId: string | null = null): Map<s
   return out;
 }
 
-/** The identities with anything logged that day, in `order`. */
+/** The identities you acted for that day, in `order`. */
 export function dayIdentities(day: DayLog, order: string[], identityId: string | null = null): string[] {
   if (identityId) return [identityId];
-  const ids = new Set([...day.entries.flatMap((e) => e.identityIds), ...day.systems.flatMap((s) => s.identityIds)]);
+  // Tracking a limit ("at most") isn't acting for an identity, so it doesn't light its dot.
+  const acting = day.entries.filter((e) => e.metric.direction !== 'atMost');
+  const ids = new Set([...acting.flatMap((e) => e.identityIds), ...day.systems.flatMap((s) => s.identityIds)]);
   return order.filter((id) => ids.has(id));
 }
 

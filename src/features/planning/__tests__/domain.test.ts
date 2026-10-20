@@ -1,6 +1,8 @@
 /// <reference types="jest" />
 import {
   dayPlan,
+  formatTime,
+  nextUp,
   fromYesterday,
   type PlanData,
   planningPrompt,
@@ -211,5 +213,23 @@ describe('archived identities', () => {
   it('they come back on unarchive', () => {
     const plans = [intention('Call coach', wed)];
     expect(dayPlan(wed, data({ plans }))).toHaveLength(1);
+  });
+});
+
+describe('nextUp', () => {
+  const items = (plans: Plan[]) => dayPlan(wed, data({ plans }));
+  it('is the next timed plan still ahead', () => {
+    const r = nextUp(items([session('run', wed, '07:00'), session('stretch', wed, '18:00')]), '15:00');
+    expect(r).toMatchObject({ earlier: false, item: { time: '18:00' } });
+  });
+  it('falls back to an anytime plan, then to one from earlier', () => {
+    expect(nextUp(items([session('run', wed, '07:00'), intention('Read', wed)]), '15:00')?.item.title).toBe('Read');
+    expect(nextUp(items([session('run', wed, '07:00')]), '15:00')).toMatchObject({ earlier: true });
+  });
+});
+
+describe('formatTime', () => {
+  it('keeps AM/PM with the time', () => {
+    expect(formatTime('17:30')).toBe('5:30\u00A0PM');
   });
 });

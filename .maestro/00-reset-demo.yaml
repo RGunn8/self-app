@@ -1,0 +1,17 @@
+# Reset to Maya's demo data (Settings › Developer, dev builds only) so flows are repeatable.
+appId: com.ryangunn.identitydashboard
+---
+- runFlow: subflows/connect.yaml
+- runFlow: subflows/home.yaml
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "Planning"
+    timeout: 5000
+- scrollUntilVisible:
+    element: "Load demo data.*"
+    direction: DOWN
+- tapOn: "Load demo data.*"
+- tapOn: "Load"
+- waitForAnimationToEnd
+- runFlow: subflows/home.yaml
+- assertVisible: "How are you living lately?"

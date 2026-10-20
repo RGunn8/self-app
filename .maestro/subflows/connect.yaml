@@ -1,0 +1,13 @@
+# Point the dev client at the local Metro server and wait for the app to load.
+appId: com.ryangunn.identitydashboard
+---
+- launchApp
+- openLink: exp+self-app://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+- extendedWaitUntil:
+    visible: "How are you living lately\\?|Runtime version.*"
+    timeout: 180000

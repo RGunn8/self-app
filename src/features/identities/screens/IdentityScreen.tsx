@@ -10,7 +10,7 @@ import { alignmentLabel } from '@/features/identities/components/IdentityCard';
 import { formatDelta, WEIGHT_LABEL, WEIGHT_VALUES } from '@/features/identities/domain';
 import { PRIORITIES, useIdentityView } from '@/features/identities/views';
 import { MetricCard } from '@/features/metrics/components/MetricCard';
-import { formatValue, periodLabel, periodValue, windowEnding, yearlyAverages } from '@/features/metrics/domain';
+import { formatAmount, formatValue, periodLabel, periodValue, windowEnding, yearlyAverages } from '@/features/metrics/domain';
 import type { Weight } from '@/features/metrics/model';
 import { metricsRepo } from '@/features/metrics/repo';
 import { SystemCard } from '@/features/systems/components/SystemCard';
@@ -209,7 +209,7 @@ export default function IdentityScreen() {
                   {metric.name} · 30 days
                 </Text>
                 <Text className="font-body-bold text-metric-sm text-ink">
-                  {formatValue(v30)} {metric.unit}
+                  {formatAmount(v30, metric.unit)}
                 </Text>
                 <Text className="font-body text-caption text-muted">
                   {formatValue(per)} {periodLabel(metric)}

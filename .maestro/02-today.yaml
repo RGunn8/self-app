@@ -1,0 +1,29 @@
+# Today: the plan for the day, completing an intention, and the swipe actions.
+appId: com.ryangunn.identitydashboard
+---
+- runFlow: subflows/home.yaml
+- tapOn: "Today, tab, 2 of 4"
+- extendedWaitUntil:
+    visible: "Plan week"
+    timeout: 5000
+- takeScreenshot: 02-today
+- tapOn: "Call mom after lunch"
+- extendedWaitUntil:
+    visible: "DONE"
+    timeout: 5000
+- takeScreenshot: 02b-intention-done
+- runFlow:
+    when:
+      visible: "Nice"
+    commands:
+      - tapOn: "Nice"
+- swipe:
+    from: ".*9:30.PM.*"
+    direction: LEFT
+- waitForAnimationToEnd
+- takeScreenshot: 02c-swipe-actions
+- tapOn: "Not today"
+- extendedWaitUntil:
+    visible: "NOT TODAY"
+    timeout: 5000
+- takeScreenshot: 02d-not-today

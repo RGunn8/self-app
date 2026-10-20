@@ -7,7 +7,7 @@ import { ICON_STROKE } from '@/shared/components/ui';
 import { useData } from '@/shared/store/data';
 import { elevation, layout, space, useTheme } from '@/shared/theme';
 
-const HIDE_FAB_ON = new Set(['onboarding', 'log', 'metric-form', 'add-tracker', 'create', 'edit', 'pause', 'system-form', 'settings', 'entry', 'week', 'plan', 'actions']);
+const HIDE_FAB_ON = new Set(['onboarding', 'log', 'metric-form', 'add-tracker', 'create', 'edit', 'pause', 'system-form', 'settings', 'entry', 'week', 'plan', 'actions', 'history', 'calendar']);
 
 /** The floating Log button. Reachable from everywhere except forms. Hidden until a metric exists. */
 export function LogFAB() {

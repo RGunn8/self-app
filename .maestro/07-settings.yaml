@@ -1,0 +1,20 @@
+# Settings: planning, day score, full-day number, backup. Turns the day score on and checks the ring.
+appId: com.ryangunn.identitydashboard
+---
+- runFlow: subflows/home.yaml
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "Planning"
+    timeout: 5000
+- takeScreenshot: 07-settings
+- scrollUntilVisible:
+    element: "Day score.*"
+    direction: DOWN
+    centerElement: true
+    visibilityPercentage: 50
+- takeScreenshot: 07b-settings-more
+- scrollUntilVisible:
+    element: "Restore from backup.*"
+    direction: DOWN
+- takeScreenshot: 07c-settings-data
+- runFlow: subflows/home.yaml

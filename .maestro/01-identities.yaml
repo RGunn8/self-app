@@ -1,0 +1,40 @@
+# Home: greeting, the Today strip, identity cards, then into one identity and its menu.
+appId: com.ryangunn.identitydashboard
+---
+- runFlow: subflows/home.yaml
+- assertVisible: "How are you living lately?"
+- assertVisible: "Today: next.*"
+- takeScreenshot: 01-identities
+- tapOn: "🏃, Runner.*"
+- extendedWaitUntil:
+    visible: "Runner options"
+    timeout: 5000
+- waitForAnimationToEnd
+- takeScreenshot: 01b-runner
+- scrollUntilVisible:
+    element: "Trend"
+    direction: DOWN
+- scrollUntilVisible:
+    element: "All"
+    direction: DOWN
+    centerElement: true
+- takeScreenshot: 01d-runner-trend
+- tapOn: "W"
+- waitForAnimationToEnd
+- takeScreenshot: 01e-trend-week
+- tapOn: "3M"
+- waitForAnimationToEnd
+- takeScreenshot: 01f-trend-3m
+- tapOn: "All"
+- extendedWaitUntil:
+    visible: "History"
+    timeout: 5000
+- takeScreenshot: 01g-metric-history
+- runFlow: subflows/home.yaml
+- tapOn: "🏃, Runner.*"
+- extendedWaitUntil:
+    visible: "Runner options"
+    timeout: 5000
+- tapOn: "Runner options"
+- waitForAnimationToEnd
+- takeScreenshot: 01c-runner-menu

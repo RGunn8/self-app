@@ -1,5 +1,5 @@
 import { alignment, type PauseRange, scoreOf, sinceRestart } from '@/features/identities/domain';
-import { type EntryPoint, formatValue, type MetricDef, periodValue, windowEnding } from '@/features/metrics/domain';
+import { type EntryPoint, formatAmount, formatValue, type MetricDef, periodValue, windowEnding } from '@/features/metrics/domain';
 import type { Weight } from '@/features/metrics/model';
 import { addDays, daysBetween, diffDays, fmt, parseDay, weekStart } from '@/shared/lib/dates';
 
@@ -90,7 +90,7 @@ export function computeInsights(identities: IdentityInput[], entries: EntryPoint
       who: t.metric.name,
       text: `You've ${t.change > 0 ? 'increased' : 'decreased'} your ${per}${lower(t.metric.name)} from ${formatValue(
         t.then,
-      )} to ${formatValue(t.now)} ${t.metric.unit} over the last three months.`,
+      )} to ${formatAmount(t.now, t.metric.unit)} over the last three months.`,
       basis: '4-week averages',
     });
   }
@@ -126,8 +126,8 @@ export function computeInsights(identities: IdentityInput[], entries: EntryPoint
           )} or more.`,
           basis: `Average weekly ${wk.unit}, ${hi.length + lo.length} weeks`,
           bars: [
-            { label: `${threshold}${d.unit}+ ${lower(d.name)}`, value: `${formatValue(h)} ${wk.unit}`, ratio: h / max },
-            { label: `Under ${threshold}${d.unit}`, value: `${formatValue(l)} ${wk.unit}`, ratio: l / max },
+            { label: `${threshold}${d.unit}+ ${lower(d.name)}`, value: `${formatAmount(h, wk.unit)}`, ratio: h / max },
+            { label: `Under ${threshold}${d.unit}`, value: `${formatAmount(l, wk.unit)}`, ratio: l / max },
           ],
         });
         break;
@@ -201,7 +201,7 @@ export function earlyObservations(identities: IdentityInput[], entries: EntryPoi
         const best = totals.reduce((a, b) => (b.v > a.v ? b : a));
         out.push({
           ...base,
-          text: `Your best ${name} week so far: ${formatValue(best.v)} ${metric.unit}, the week of ${fmt.short(best.k)}.`,
+          text: `Your best ${name} week so far: ${formatAmount(best.v, metric.unit)}, the week of ${fmt.short(best.k)}.`,
           basis: `${weeks.size} weeks with entries`,
         });
       }
@@ -210,7 +210,7 @@ export function earlyObservations(identities: IdentityInput[], entries: EntryPoi
     // Personal best so far, when "more" is the goal.
     if (metric.direction === 'atLeast' && metric.aggregation !== 'count' && metric.aggregation !== 'min' && mine.length >= EARLY_MIN_ENTRIES) {
       const best = mine.reduce((a, b) => (b.value > a.value ? b : a));
-      out.push({ ...base, text: `Your best ${name} so far: ${formatValue(best.value)} ${metric.unit} on ${fmt.short(best.day)}.`, basis: `${mine.length} entries` });
+      out.push({ ...base, text: `Your best ${name} so far: ${formatAmount(best.value, metric.unit)} on ${fmt.short(best.day)}.`, basis: `${mine.length} entries` });
     }
   }
   return out.slice(0, MAX_EARLY);

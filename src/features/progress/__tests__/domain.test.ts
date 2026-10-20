@@ -4,7 +4,7 @@ import type { LogData } from '@/features/logging/domain';
 import type { Entry } from '@/features/logging/model';
 import { type MetricDef, toEntryPoint } from '@/features/metrics/domain';
 import type { IdentityMetric, Metric } from '@/features/metrics/model';
-import { isVoteMilestone, momentFor, unlockPath, votesFor } from '@/features/progress/domain';
+import { isNewVote, isVoteMilestone, momentFor, unlockPath, votesFor } from '@/features/progress/domain';
 import type { System, SystemCompletion, SystemIdentity } from '@/features/systems/model';
 import { addDays, parseDay } from '@/shared/lib/dates';
 
@@ -173,5 +173,27 @@ describe('intentions as votes', () => {
     expect(votesFor('runner', { ...data, plans: [plan({})] } as never).count).toBe(1);
     expect(votesFor('runner', { ...data, plans: [plan({ entryId: 'e1' })] } as never).count).toBe(0);
     expect(votesFor('runner', { ...data, plans: [plan({ status: 'planned' })] } as never).count).toBe(0);
+  });
+});
+
+describe('what counts as a vote', () => {
+  it('a limit ("at most") is never a vote, and repeats in a day count once', () => {
+    const drinks = def('drinks', { direction: 'atMost', target: 3 });
+    const base = world([entry('run', '2026-09-20'), entry('run', '2026-09-20')]);
+    const data = { ...base.data, metrics: [...base.data.metrics, metric(drinks)], links: [...base.data.links, link('runner', 'drinks')] };
+    expect(votesFor('runner', { ...data, entries: [...data.entries, entry('drinks', '2026-09-20')] }).count).toBe(1);
+    expect(isNewVote(data, 'drinks', asOf)).toBe(false);
+    expect(isNewVote(data, 'run', '2026-09-20')).toBe(false);
+    expect(isNewVote(data, 'run', asOf)).toBe(true);
+  });
+
+  it('logging a limit, or the same metric again that day, brings no vote moment', () => {
+    const { data, identities } = world([]);
+    const withDrinks = { ...data, metrics: [...data.metrics, metric(def('drinks', { direction: 'atMost' }))], links: [...data.links, link('runner', 'drinks')] };
+    expect(momentFor(withDrinks, { kind: 'entry', metricId: 'drinks', value: 1, day: asOf }, identities, asOf)).toBeNull();
+    const nine = [entry('read', addDays(asOf, -1), 5), ...Array.from({ length: 9 }, (_, i) => entry('run', addDays('2026-08-01', i), 1)), entry('run', asOf, 1)];
+    const w = world(nine, { runDef: def('run', { target: 1000 }) });
+    // A tenth entry, but the second today: no "10 votes" moment.
+    expect(momentFor(w.data, { kind: 'entry', metricId: 'run', value: 1, day: asOf }, w.identities, asOf)).toBeNull();
   });
 });

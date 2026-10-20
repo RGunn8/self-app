@@ -155,6 +155,8 @@ export interface SeriesPoint {
   /** Last day of the bar's bucket. */
   to: string;
   value: number | null;
+  /** A total for a period that isn't over yet (this week so far); drawn apart and left out of averages. */
+  partial?: boolean;
 }
 
 export type ChartPeriod = 'W' | 'M' | '3M' | 'All';
@@ -246,7 +248,11 @@ export function chartSeries(
     const end = b.to < asOf ? b.to : asOf;
     let value: number | null;
     if (cumulative) value = sum(periodStart(cumulative, end), end);
-    else if (additive && PERIOD_DAYS[metric.period] === PERIOD_DAYS[bucket]) value = sum(b.from, end);
+    else if (additive && PERIOD_DAYS[metric.period] === PERIOD_DAYS[bucket]) {
+      // This week's total is still growing; flag it so it doesn't read as a drop.
+      if (b.to > asOf && b.from !== b.to) return { key: b.from, to: b.to, value: sum(b.from, end), partial: true };
+      value = sum(b.from, end);
+    }
     else if (additive) value = periodValue(metric, mine, { from: b.from, to: end }, excluded);
     else value = aggregate(dailyValues(metric, mine, { from: b.from, to: end }, excluded).map((d) => d.value), metric.aggregation);
     return { key: b.from, to: b.to, value };
@@ -318,7 +324,17 @@ export function formatValue(v: number | null | undefined): string {
   const abs = Math.abs(v);
   if (abs >= 1000) return Math.round(v).toLocaleString('en-US');
   if (abs >= 100) return String(Math.round(v));
-  return (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/, abs >= 10 ? '' : '.0');
+  // Whole numbers read as counts: "3 runs", not "3.0 runs".
+  return (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/, '');
+}
+
+const CURRENCY = new Set(['$', '€', '£', '¥', '₹']);
+
+/** A value with its unit: "3.6 mi", "3 runs", and currency first: "$173". */
+export function formatAmount(v: number | null | undefined, unit: string): string {
+  const n = formatValue(v);
+  if (n === '–') return n;
+  return CURRENCY.has(unit.trim()) ? `${unit.trim()}${n}` : `${n} ${unit}`;
 }
 
 export function formatChange(change: number | null): string {

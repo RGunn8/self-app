@@ -12,7 +12,7 @@ export default function CreatePriority() {
   const { name, priority, marker, accent, patch } = useCreateDraft();
   const label = name.trim() || 'this identity';
   return (
-    <Screen header={<NavHeader title="2 of 3" right={null} />}>
+    <Screen modal header={<NavHeader title="2 of 3" right={null} />}>
       <Text className="font-heading text-display-md text-ink">How important is {label} in your life right now?</Text>
       <PriorityRadio value={priority} onChange={(v) => patch({ priority: v })} name={label} />
       <Text className="font-body text-caption text-muted">

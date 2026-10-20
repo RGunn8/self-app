@@ -1,15 +1,37 @@
 import { alignment, BASELINE_DAYS, sinceRestart } from '@/features/identities/domain';
 import { INSIGHTS_MIN_DAYS, type IdentityInput } from '@/features/insights/domain';
 import type { LogData } from '@/features/logging/domain';
-import { aggregate, type EntryPoint, formatValue, periodStart, toEntryPoint } from '@/features/metrics/domain';
+import { aggregate, type EntryPoint, formatAmount, periodStart, toEntryPoint } from '@/features/metrics/domain';
 import { addDays, dayKey, diffDays, fmt, monthEnd } from '@/shared/lib/dates';
 
 // Votes ---------------------------------------------------------------------------------------
 
 /**
- * Every manual entry on a linked metric and every completed linked system is a vote for the
- * identity. Entries a system logged ride on its completion, so they aren't counted twice.
- * The count only grows; it never resets (a restart counts from its day, and can be undone).
+ * Which manual entries are votes: acting, not tracking a limit. "At most" metrics (drinks,
+ * screen time) aren't votes, and each metric votes at most once a day, so logging the same
+ * thing ten times is still one vote. Returns "metricId:day" keys.
+ */
+export function voteEntries(data: Pick<LogData, 'entries' | 'metrics'>): Set<string> {
+  const atMost = new Set(data.metrics.filter((m) => m.direction === 'atMost').map((m) => m.id));
+  const out = new Set<string>();
+  for (const e of data.entries) {
+    if (e.systemCompletionId !== null || atMost.has(e.metricId)) continue;
+    out.add(`${e.metricId}:${dayKey(e.loggedAt)}`);
+  }
+  return out;
+}
+
+/** Whether logging this metric on this day would cast a new vote. */
+export function isNewVote(data: Pick<LogData, 'entries' | 'metrics'>, metricId: string, day: string): boolean {
+  const metric = data.metrics.find((m) => m.id === metricId);
+  if (!metric || metric.direction === 'atMost') return false;
+  return !voteEntries(data).has(`${metricId}:${day}`);
+}
+
+/**
+ * Every vote-worthy entry (see voteEntries) on a linked metric and every completed linked
+ * system is a vote for the identity. Entries a system logged ride on its completion, so they
+ * aren't counted twice. The count only grows; a restart counts from its day, and can be undone.
  */
 export function votesFor(identityId: string, data: LogData, restartedAt: string | null = null): { count: number; since: string | null } {
   const metricIds = new Set(data.links.filter((l) => l.identityId === identityId).map((l) => l.metricId));
@@ -21,7 +43,10 @@ export function votesFor(identityId: string, data: LogData, restartedAt: string 
     count++;
     if (since === null || day < since) since = day;
   };
-  for (const e of data.entries) if (e.systemCompletionId === null && metricIds.has(e.metricId)) see(dayKey(e.loggedAt));
+  for (const key of voteEntries(data)) {
+    const [metricId, day] = key.split(':');
+    if (metricIds.has(metricId)) see(day);
+  }
   for (const c of data.completions) if (systemIds.has(c.systemId)) see(c.date);
   // An intention that logged a value already counts through its entry.
   for (const p of data.plans ?? []) {
@@ -117,9 +142,11 @@ export function momentFor(before: LogData, added: Added, identities: IdentityInp
   const metric = added.kind === 'entry' ? before.metrics.find((m) => m.id === added.metricId) : undefined;
   const afterPoints = added.kind === 'entry' ? [...beforePoints, { metricId: added.metricId, value: added.value, day: added.day }] : beforePoints;
   const votes = new Map(supporters.map((i) => [i.id, votesFor(i.id, before, i.since ?? null).count]));
+  // Limits ("at most") and repeat logs of the same metric that day don't cast a new vote.
+  const newVote = added.kind !== 'entry' || isNewVote(before, added.metricId, added.day);
 
   // 1. First vote.
-  const fresh = supporters.find((i) => votes.get(i.id) === 0);
+  const fresh = newVote ? supporters.find((i) => votes.get(i.id) === 0) : undefined;
   if (fresh) {
     return fresh.since
       ? { identityId: fresh.id, title: `A fresh start for ${fresh.name}`, body: 'The first vote since your restart. Everything counts from here.' }
@@ -173,7 +200,7 @@ export function momentFor(before: LogData, added: Added, identities: IdentityInp
         return {
           identityId: host.id,
           title: `${metric.name}: goal reached`,
-          body: `${formatValue(now)} ${metric.unit} this ${metric.period}. That's the ${formatValue(metric.target)} ${metric.unit} you set out to do.`,
+          body: `${formatAmount(now, metric.unit)} this ${metric.period}. That's the ${formatAmount(metric.target, metric.unit)} you set out to do.`,
         };
       }
     }
@@ -196,14 +223,14 @@ export function momentFor(before: LogData, added: Added, identities: IdentityInp
         return {
           identityId: host.id,
           title: `Best ${lower(metric.name)} yet`,
-          body: `${formatValue(mine)} ${metric.unit}, beating ${formatValue(best.value)} ${metric.unit} from ${fmt.short(best.day)}.`,
+          body: `${formatAmount(mine, metric.unit)}, beating ${formatAmount(best.value, metric.unit)} from ${fmt.short(best.day)}.`,
         };
       }
     }
   }
 
   // 5. Vote milestones.
-  const milestone = supporters.find((i) => isVoteMilestone((votes.get(i.id) ?? 0) + 1));
+  const milestone = newVote ? supporters.find((i) => isVoteMilestone((votes.get(i.id) ?? 0) + 1)) : undefined;
   if (milestone) {
     const n = (votes.get(milestone.id) ?? 0) + 1;
     return { identityId: milestone.id, title: `${n} votes for ${milestone.name}`, body: 'Each one is a small piece of evidence for who you’re becoming.' };

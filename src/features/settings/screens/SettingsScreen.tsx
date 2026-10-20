@@ -66,7 +66,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <Screen header={<NavHeader title="Settings" back={false} right={<HeaderAction label="Done" bold onPress={() => router.back()} />} />}>
+    <Screen modal header={<NavHeader title="Settings" back={false} right={<HeaderAction label="Done" bold onPress={() => router.back()} />} />}>
       <Text className="font-heading text-display-lg text-ink">Settings</Text>
 
       <Group title="Data sources">

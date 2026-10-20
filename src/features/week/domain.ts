@@ -1,6 +1,6 @@
 import { alignment, pausedDays, scoreOf, sinceRestart } from '@/features/identities/domain';
 import type { IdentityInput } from '@/features/insights/domain';
-import { aggregate, dailyValues, type EntryPoint, formatValue, type MetricDef, periodStart, periodValue, windowEnding } from '@/features/metrics/domain';
+import { aggregate, dailyValues, type EntryPoint, formatAmount, formatValue, type MetricDef, periodStart, periodValue, windowEnding } from '@/features/metrics/domain';
 import { addDays, daysBetween, fmt, parseDay } from '@/shared/lib/dates';
 
 export interface WeekIdentityRow {
@@ -34,7 +34,7 @@ export interface WeekReview {
 function weekValueText(metric: MetricDef, entries: EntryPoint[], from: string, to: string): string | null {
   const v = periodValue({ ...metric, period: metric.period === 'day' ? 'day' : 'week' }, entries, { from, to });
   if (v === null) return null;
-  return `${formatValue(v)} ${metric.unit}`;
+  return `${formatAmount(v, metric.unit)}`;
 }
 
 /** The week vs. the usual four weeks before it, one highlight, and skipped days. */
@@ -133,7 +133,7 @@ export function weekWins(identities: IdentityInput[], entries: EntryPoint[], wee
     if (metric.period === 'day') {
       for (const { day, value } of dailyValues(metric, mine, { from: weekStartKey, to: weekEnd })) {
         if (metric.direction === 'atLeast' ? value >= metric.target : value <= metric.target) {
-          add(day, 'daily', `${metric.name} ${formatValue(value)} ${unit} · ${metric.direction === 'atLeast' ? 'goal met' : 'under your limit'}`);
+          add(day, 'daily', `${metric.name} ${formatAmount(value, unit)} · ${metric.direction === 'atLeast' ? 'goal met' : 'under your limit'}`);
         }
       }
     }
@@ -146,7 +146,7 @@ export function weekWins(identities: IdentityInput[], entries: EntryPoint[], wee
         const before = day === from ? 0 : upTo(addDays(day, -1));
         const after = upTo(day);
         if (before < metric.target && after >= metric.target) {
-          add(day, 'period', `${metric.name} ${metric.period === 'week' ? 'weekly' : 'monthly'} goal reached · ${formatValue(after)} ${unit}`);
+          add(day, 'period', `${metric.name} ${metric.period === 'week' ? 'weekly' : 'monthly'} goal reached · ${formatAmount(after, unit)}`);
         }
       }
     }
@@ -168,7 +168,7 @@ export function weekWins(identities: IdentityInput[], entries: EntryPoint[], wee
         if (mineToday > prevBest) {
           const i = wins.findIndex((w) => w.day === day && w.kind === 'daily' && w.metricId === metric.id);
           if (i >= 0) wins.splice(i, 1);
-          add(day, 'best', `${metric.name} ${formatValue(mineToday)} ${unit} · best yet`);
+          add(day, 'best', `${metric.name} ${formatAmount(mineToday, unit)} · best yet`);
         }
       }
     }

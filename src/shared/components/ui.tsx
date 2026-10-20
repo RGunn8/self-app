@@ -38,11 +38,18 @@ export function Screen({
   header,
   bottomInset = 0,
   contentContainerClassName,
+  modal = false,
   ...rest
-}: ComponentProps<typeof KeyboardAwareScrollView> & { header?: ReactNode; bottomInset?: number; contentContainerClassName?: string }) {
+}: ComponentProps<typeof KeyboardAwareScrollView> & {
+  header?: ReactNode;
+  bottomInset?: number;
+  contentContainerClassName?: string;
+  /** Presented as an iOS sheet/modal: the sheet already sits below the status bar, so skip the top inset. */
+  modal?: boolean;
+}) {
   const insets = useSafeAreaInsets();
   return (
-    <View className="flex-1 bg-bg" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-bg" style={{ paddingTop: modal ? 0 : insets.top }}>
       {header}
       <KeyboardAwareScrollView
         bottomOffset={KEYBOARD_OFFSET}

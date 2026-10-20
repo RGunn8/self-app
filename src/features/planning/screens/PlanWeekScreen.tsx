@@ -65,7 +65,7 @@ export default function PlanWeekScreen() {
   };
 
   return (
-    <Screen
+    <Screen modal
       header={
         <NavHeader back={false} left={<HeaderAction label="Cancel" onPress={() => router.back()} />} right={<HeaderAction label="Save" bold onPress={save} />} />
       }>
@@ -86,7 +86,8 @@ export default function PlanWeekScreen() {
       ) : (
         systems.map((s) => {
           const d = drafts[s.id] ?? { days: [], time: null };
-          const host = data.identities.find((i) => data.systemIdentities.some((l) => l.systemId === s.id && l.identityId === i.id));
+          const served = data.identities.filter((i) => i.archivedAt === null && data.systemIdentities.some((l) => l.systemId === s.id && l.identityId === i.id));
+          const host = served[0];
           const acc = accentFor(p, host?.accent);
           const target = s.frequency === 'daily' ? 7 : s.timesPerWeek;
           return (
@@ -96,7 +97,7 @@ export default function PlanWeekScreen() {
                   <Text className="font-heading text-heading-card text-ink">{s.name}</Text>
                   <Text className="font-body text-caption text-muted">
                     {cadenceLabel(s.frequency, s.timesPerWeek)}
-                    {host ? ` · ${host.name}` : ''}
+                    {served.length ? ` · ${served.map((i) => i.name).join(' · ')}` : ''}
                   </Text>
                 </View>
                 <Text className="font-body-semibold text-label text-muted">

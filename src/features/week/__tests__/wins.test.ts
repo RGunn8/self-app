@@ -28,7 +28,7 @@ describe('weekWins', () => {
   it('counts staying under an "at most" daily limit', () => {
     const drinks = m('Drinks', { target: 2, direction: 'atMost', unit: 'drinks' });
     const wins = weekWins([who('me', [drinks])], [e('Drinks', '2026-09-21', 1), e('Drinks', '2026-09-22', 3)], week);
-    expect(summary(wins)).toEqual(['2026-09-21 daily Drinks 1.0 drinks · under your limit']);
+    expect(summary(wins)).toEqual(['2026-09-21 daily Drinks 1 drinks · under your limit']);
   });
 
   it('marks the day a weekly goal was reached, once', () => {

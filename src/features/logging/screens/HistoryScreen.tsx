@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
 import { dayIdentities, firstLogDay, logByDay } from '@/features/logging/domain';
-import { formatValue } from '@/features/metrics/domain';
+import { formatAmount } from '@/features/metrics/domain';
 import { DayRing } from '@/features/progress/components/DayRing';
 import { useDayScore } from '@/features/progress/views';
 import { type DayMark, MonthCalendar } from '@/shared/components/calendar';
@@ -89,7 +89,7 @@ export default function HistoryScreen() {
                     onPress={() => router.push(`/entry/${entry.id}`)}
                     right={
                       <Text className="text-label text-ink font-body-bold">
-                        {formatValue(entry.value)} {metric.unit}
+                        {formatAmount(entry.value, metric.unit)}
                       </Text>
                     }
                   />

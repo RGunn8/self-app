@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { Check, ChevronRight } from 'lucide-react-native';
-import { Pressable, Text, View } from 'react-native';
+import { useRef } from 'react';
+import { type GestureResponderEvent, Pressable, Text, View } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 
 import { completeIntention, moveToTomorrow, openSession, removePlan, reopenIntention, skipPlan } from '@/features/planning/actions';
@@ -8,6 +9,8 @@ import { formatTime, type PlanItem } from '@/features/planning/domain';
 import { ICON_STROKE, Row } from '@/shared/components/ui';
 import { useData } from '@/shared/store/data';
 import { accentFor, useTheme } from '@/shared/theme';
+
+const TAP_SLOP = 8;
 
 function SwipeAction({ label, onPress, strong }: { label: string; onPress: () => void; strong?: boolean }) {
   return (
@@ -30,7 +33,19 @@ export function PlanRow({ item }: { item: PlanItem }) {
   const done = item.status === 'done';
   const skipped = item.status === 'skipped';
 
+  // A swipe that starts on the circle must not complete the plan: only a still tap counts.
+  const start = useRef({ x: 0, y: 0 });
+  const moved = useRef(false);
+  const onPressIn = (e: GestureResponderEvent) => {
+    start.current = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
+    moved.current = false;
+  };
+  const onPressOut = (e: GestureResponderEvent) => {
+    moved.current = Math.hypot(e.nativeEvent.pageX - start.current.x, e.nativeEvent.pageY - start.current.y) > TAP_SLOP;
+  };
+
   const toggle = () => {
+    if (moved.current) return;
     if (item.kind === 'system') return openSession(item);
     if (done) return reopenIntention(item);
     completeIntention(item);
@@ -39,7 +54,6 @@ export function PlanRow({ item }: { item: PlanItem }) {
     item.time ? formatTime(item.time) : 'Anytime',
     who.map((i) => i.name).join(' · '),
     metric && item.plan.amount !== null ? `logs ${item.plan.amount} ${metric.unit}` : null,
-    skipped ? 'Not today' : null,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -59,6 +73,8 @@ export function PlanRow({ item }: { item: PlanItem }) {
       <Row className="gap-3 rounded-md bg-card px-4 py-3" style={skipped ? { opacity: 0.55 } : null}>
         <Pressable
           onPress={toggle}
+          onPressIn={onPressIn}
+          onPressOut={onPressOut}
           hitSlop={8}
           accessibilityRole={item.kind === 'system' ? 'button' : 'checkbox'}
           accessibilityLabel={item.kind === 'system' ? `Open ${item.title}` : item.title}

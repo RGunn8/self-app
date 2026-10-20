@@ -162,7 +162,11 @@ export default function PlanDaySheet() {
       {already.filter((i) => i.status === 'planned').length + pickedIds.length + (intentionReady ? 1 : 0) > limit ? (
         <Text className="font-body text-caption text-muted">That’s more than your {limit} for a day. You can still add it.</Text>
       ) : null}
-      <Button label={canSave ? 'Add to plan' : 'Pick something to plan'} disabled={!canSave} onPress={save} />
+      <Button
+        label={canSave ? 'Add to plan' : intentionStarted && identityId === null ? 'Choose who it’s for' : 'Pick something to plan'}
+        disabled={!canSave}
+        onPress={save}
+      />
     </ScrollView>
   );
 }

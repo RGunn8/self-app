@@ -9,8 +9,9 @@ const row = { createdAt: 0, updatedAt: 0, deletedAt: null };
 const day = '2026-09-23';
 let n = 0;
 
-const entry = (d: string, systemCompletionId: string | null = null) =>
-  ({ ...row, id: `e${n++}`, metricId: 'run', value: 1, loggedAt: parseDay(d).getTime() + 9 * 3_600_000, source: 'manual', systemCompletionId }) as Entry;
+// Each entry is a different metric, so several on one day are several votes (one metric votes once a day).
+const entry = (d: string, systemCompletionId: string | null = null, metricId = `m${n}`) =>
+  ({ ...row, id: `e${n++}`, metricId, value: 1, loggedAt: parseDay(d).getTime() + 9 * 3_600_000, source: 'manual', systemCompletionId }) as Entry;
 const done = (systemId: string, date: string) => ({ ...row, id: `c${n++}`, systemId, date }) as SystemCompletion;
 const plan = (d: string, over: Partial<Plan> = {}): Plan => ({
   ...row,
@@ -117,6 +118,7 @@ describe('dayScore', () => {
 describe('votesByDay', () => {
   it('counts manual entries, completions and value-less intentions once each', () => {
     const v = votesByDay({
+      metrics: [],
       entries: [entry(day), entry(day, 'c-sys')],
       completions: [done('stretch', day)],
       plans: [plan(day, { status: 'done' }), plan(day, { status: 'done', entryId: 'e-x' }), plan(day)],
@@ -131,5 +133,18 @@ describe('fullestDays', () => {
     const d = data({ plans: [plan(monday, { status: 'done' }), plan('2026-09-22'), plan(day, { status: 'done' }), plan(day)] });
     // Mon: 1 of 1 kept (Full). Tue: quiet. Wed: 1 of 2 kept (Steady).
     expect(fullestDays(monday, day, d, true)).toEqual([monday]);
+  });
+});
+
+describe('votes are acting, once per metric a day', () => {
+  it('logging the same metric twice in a day is one vote', () => {
+    const v = votesByDay({ metrics: [], entries: [entry(day, null, 'run'), entry(day, null, 'run')], completions: [], plans: [] });
+    expect(v.get(day)).toBe(1);
+  });
+
+  it('"at most" metrics (limits) aren’t votes', () => {
+    const drinks = { ...row, id: 'drinks', direction: 'atMost' } as never;
+    const v = votesByDay({ metrics: [drinks], entries: [entry(day, null, 'drinks')], completions: [], plans: [] });
+    expect(v.get(day)).toBeUndefined();
   });
 });

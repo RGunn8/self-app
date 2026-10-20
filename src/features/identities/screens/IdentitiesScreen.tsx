@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IdentityCard } from '@/features/identities/components/IdentityCard';
 import { PRIORITIES, useIdentityViews } from '@/features/identities/views';
 import { TodayStrip } from '@/features/planning/components/TodayStrip';
-import { formatValue } from '@/features/metrics/domain';
+import { formatAmount } from '@/features/metrics/domain';
 import { DayRing } from '@/features/progress/components/DayRing';
 import { useDayScore } from '@/features/progress/views';
 import { Button, Card, EmptyState, HeaderAction, ICON_STROKE, ListRow, Overline, Row } from '@/shared/components/ui';
@@ -101,7 +101,7 @@ export default function IdentitiesTab() {
                         onPress={() => router.push(`/entry/${e.id}`)}
                         right={
                           <Text className="text-label text-ink font-body-bold">
-                            {formatValue(e.value)} {m!.unit}
+                            {formatAmount(e.value, m!.unit)}
                           </Text>
                         }
                       />

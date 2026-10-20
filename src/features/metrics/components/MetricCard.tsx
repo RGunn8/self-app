@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { Text, View } from 'react-native';
 
-import { formatChange, formatValue, periodLabel, periodValue, progress, trendFor, windowEnding, type EntryPoint } from '@/features/metrics/domain';
+import { formatChange, formatAmount, formatValue, periodLabel, periodValue, progress, trendFor, windowEnding, type EntryPoint } from '@/features/metrics/domain';
 import type { Metric } from '@/features/metrics/model';
 import { Bar } from '@/shared/components/charts';
 import { Card, Row } from '@/shared/components/ui';
@@ -10,7 +10,7 @@ import { useTheme } from '@/shared/theme';
 
 export function goalText(m: Pick<Metric, 'direction' | 'target' | 'unit' | 'period'>) {
   const per = m.period === 'day' ? (m.unit === 'h' ? 'night' : 'day') : m.period === 'week' ? 'wk' : 'mo';
-  return `${m.direction === 'atMost' ? 'At most ' : ''}${formatValue(m.target)} ${m.unit} / ${per}`;
+  return `${m.direction === 'atMost' ? 'At most ' : ''}${formatAmount(m.target, m.unit)} / ${per}`;
 }
 
 export const AGG_LABEL = { total: 'Total', average: 'Average', count: 'Count', max: 'Maximum', min: 'Minimum' } as const;

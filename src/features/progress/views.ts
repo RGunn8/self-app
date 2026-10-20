@@ -5,7 +5,7 @@ import { identityInputs } from '@/features/identities/views';
 import type { LogData } from '@/features/logging/domain';
 import { planDataOf } from '@/features/planning/views';
 import { type DayData, type DayScore, dayScore, fullestDays } from '@/features/progress/dayScore';
-import { type Added, momentFor, type Moment, identitiesForLog, votesFor } from '@/features/progress/domain';
+import { type Added, identitiesForLog, isNewVote, momentFor, type Moment, votesFor } from '@/features/progress/domain';
 import { today } from '@/shared/lib/dates';
 import { type Snapshot, useData } from '@/shared/store/data';
 
@@ -31,6 +31,8 @@ export function afterLog(before: Snapshot, added: Added, what: string): { moment
   const moment = momentFor(data, added, identities, today());
   const supporters = identitiesForLog(added, data, identities);
   let line = what;
+  const newVote = added.kind !== 'entry' || isNewVote(data, added.metricId, added.day);
+  if (!newVote) return { moment, line };
   if (supporters.length === 1) line += ` · vote #${votesFor(supporters[0].id, data, supporters[0].since ?? null).count + 1} for ${supporters[0].name}`;
   else if (supporters.length > 1) line += ` · a vote for ${supporters.map((i) => i.name).join(' and ')}`;
   return { moment, line };

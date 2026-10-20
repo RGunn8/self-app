@@ -32,7 +32,7 @@ export default function CreateMetrics() {
   };
 
   return (
-    <Screen header={<NavHeader title="3 of 3" right={null} />}>
+    <Screen modal header={<NavHeader title="3 of 3" right={null} />}>
       <View className="gap-2">
         <Text className="font-body-semibold text-label text-muted">
           {name}

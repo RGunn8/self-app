@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { aggregate, calendarMonths, formatValue } from '@/features/metrics/domain';
+import { aggregate, calendarMonths, formatAmount } from '@/features/metrics/domain';
 import { type DayMark, MonthCalendar } from '@/shared/components/calendar';
 import { Card, Chip, NavHeader, Row, Screen } from '@/shared/components/ui';
 import { dayKey, fmt, monthStart, today } from '@/shared/lib/dates';
@@ -72,7 +72,7 @@ export default function MetricCalendarScreen() {
         />
         {shownMonth?.value !== null && shownMonth?.value !== undefined ? (
           <Text className="font-body text-caption text-muted">
-            {fmt.month(month)} · {formatValue(shownMonth.value)} {metric.unit}
+            {fmt.month(month)} · {formatAmount(shownMonth.value, metric.unit)}
           </Text>
         ) : null}
       </Card>
@@ -80,14 +80,14 @@ export default function MetricCalendarScreen() {
       <View className="gap-2">
         <Text className="font-body-semibold text-label text-muted">
           {fmt.dowShort(selected)}
-          {dayEntries.length ? ` · ${formatValue(dayValue)} ${metric.unit}` : ''}
+          {dayEntries.length ? ` · ${formatAmount(dayValue, metric.unit)}` : ''}
         </Text>
         {dayEntries.length ? (
           dayEntries.map((e) => (
             <Pressable key={e.id} onPress={() => router.push(`/entry/${e.id}`)} className="flex-row items-center p-4 rounded-md bg-card">
               <View className="flex-1">
                 <Text className="font-body-bold text-ink text-[18px] leading-[22px]">
-                  {formatValue(e.value)} {metric.unit}
+                  {formatAmount(e.value, metric.unit)}
                 </Text>
                 <Text className="font-body text-caption text-muted">
                   {e.systemCompletionId ? 'System' : 'Manual'} · {fmt.time(e.loggedAt)}

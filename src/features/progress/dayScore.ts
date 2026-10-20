@@ -3,7 +3,8 @@
 import { activePause } from '@/features/identities/domain';
 import type { LogData } from '@/features/logging/domain';
 import { dayPlan, type PlanData } from '@/features/planning/domain';
-import { addDays, dayKey, daysBetween } from '@/shared/lib/dates';
+import { voteEntries } from '@/features/progress/domain';
+import { addDays, daysBetween } from '@/shared/lib/dates';
 
 export type DayData = LogData & PlanData;
 
@@ -33,11 +34,11 @@ const USUAL_WINDOW = 28;
 const NO_HISTORY_USUAL = 2;
 const FLOOR = 0.25;
 
-/** Votes per day: manual entries, system completions, and done intentions that didn't log a value. */
-export function votesByDay(data: Pick<LogData, 'entries' | 'completions' | 'plans'>): Map<string, number> {
+/** Votes per day, by the same rule as votesFor: acting (not limits), once per metric a day; plus completions and intentions. */
+export function votesByDay(data: Pick<LogData, 'entries' | 'metrics' | 'completions' | 'plans'>): Map<string, number> {
   const out = new Map<string, number>();
   const add = (day: string) => out.set(day, (out.get(day) ?? 0) + 1);
-  for (const e of data.entries) if (e.systemCompletionId === null) add(dayKey(e.loggedAt));
+  for (const key of voteEntries(data)) add(key.slice(key.indexOf(':') + 1));
   for (const c of data.completions) add(c.date);
   for (const p of data.plans ?? []) if (p.kind === 'intention' && p.status === 'done' && p.entryId === null) add(p.day);
   return out;

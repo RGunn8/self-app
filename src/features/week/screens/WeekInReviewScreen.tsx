@@ -91,7 +91,7 @@ export default function WeekInReview() {
   const fullest = useFullestDays(ws, today());
 
   return (
-    <Screen header={<NavHeader back={false} left={<HeaderAction label="Close" onPress={() => router.back()} />} />}>
+    <Screen modal header={<NavHeader back={false} left={<HeaderAction label="Close" onPress={() => router.back()} />} />}>
       <View className="gap-2">
         <Text className="font-body text-body-sm text-muted">
           Week of {fmt.short(review.weekStart)} – {fmt.short(review.weekEnd)}

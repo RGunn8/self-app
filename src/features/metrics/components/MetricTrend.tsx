@@ -25,7 +25,7 @@ function summaryOf(metric: MetricDef, s: ChartSeries) {
     for (const pt of s.points) if (pt.value !== null) last = pt.value;
     return { value: last, caption: `of ${formatValue(metric.target)} · ${s.cumulative} to date` };
   }
-  const nums = s.points.flatMap((pt) => (pt.value === null ? [] : [pt.value]));
+  const nums = s.points.flatMap((pt) => (pt.value === null || pt.partial ? [] : [pt.value]));
   const avg = nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null;
   return { value: avg, caption: s.bucket === 'day' || metric.period === 'day' ? 'Daily avg' : 'Weekly avg' };
 }

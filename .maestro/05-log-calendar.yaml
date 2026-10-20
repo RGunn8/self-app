@@ -1,0 +1,13 @@
+# The all-identities log calendar, filtered to one identity.
+appId: com.ryangunn.identitydashboard
+---
+- runFlow: subflows/home.yaml
+- tapOn: "Log calendar"
+- extendedWaitUntil:
+    visible: "Log"
+    timeout: 5000
+- waitForAnimationToEnd
+- takeScreenshot: 05-log-calendar
+- tapOn: "Writer"
+- waitForAnimationToEnd
+- takeScreenshot: 05b-log-writer

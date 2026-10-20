@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { type LayoutChangeEvent, Pressable, Text, View } from 'react-native';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 
-import { type Bucket, formatValue, type SeriesPoint } from '@/features/metrics/domain';
+import { type Bucket, formatAmount, formatValue, type SeriesPoint } from '@/features/metrics/domain';
 import { Row } from '@/shared/components/ui';
 import { fmt, parseDay, weekdayInitial } from '@/shared/lib/dates';
 import { useTheme } from '@/shared/theme';
@@ -91,19 +91,21 @@ export function TrendChart({
     const step = points.length > 1 ? plotW / (points.length - 1) : 0;
     const x = (i: number) => padL + (points.length === 1 ? plotW / 2 : i * step);
     const y = (v: number) => 8 + (1 - (v - lo) / (hi - lo)) * plotH;
+    // A period that isn't over yet (this week so far) is drawn apart, dashed, so it doesn't read as a drop.
     const path = d3line<SeriesPoint>()
-      .defined((d) => d.value !== null)
+      .defined((d) => d.value !== null && !d.partial)
       .x((_, i) => x(i))
       .y((d) => y(d.value as number))(points);
     let last = -1;
-    for (let i = points.length - 1; i >= 0; i--) if (points[i].value !== null) { last = i; break; }
+    for (let i = points.length - 1; i >= 0; i--) if (points[i].value !== null && !points[i].partial) { last = i; break; }
+    const partial = points.findIndex((pt) => pt.partial && pt.value !== null);
     const yTicks = [0, hi / 2, hi].map((v) => ({ v, y: y(v) }));
     const xIdx =
       bucket === 'week'
         ? [...new Set([0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * (points.length - 1))))]
         : points.map((_, i) => i).filter((i) => tickLabel(points[i], bucket, points.length) !== null);
     const hit = Math.max(step, 12);
-    return { x, y, path, last, yTicks, xIdx, padL, hit, plotBottom: height - padB };
+    return { x, y, path, last, partial, yTicks, xIdx, padL, hit, plotBottom: height - padB };
   }, [width, target, points, height, bucket]);
 
   const dot = selected ? selectedIdx : geo?.last ?? -1;
@@ -116,7 +118,7 @@ export function TrendChart({
           <Text className="font-body-semibold text-label text-muted">{unit}</Text>
         </Row>
         <Text className="font-body text-caption text-muted">
-          {selected ? [pointLabel(selected, bucket), pointNote].filter(Boolean).join(' · ') : summary.caption}
+          {selected ? [pointLabel(selected, bucket), selected.partial ? 'so far' : null, pointNote].filter(Boolean).join(' · ') : summary.caption}
         </Text>
       </View>
       <View onLayout={onLayout} className="w-full" style={{ height }} accessibilityLabel={`Trend chart in ${unit}`}>
@@ -154,7 +156,30 @@ export function TrendChart({
                   <Rect key={pt.key} x={geo.x(i) - 2.5} y={geo.y(pt.value) - 2.5} width={5} height={5} rx={2.5} fill={color} />
                 ) : null,
               )}
-              {dot >= 0 ? (
+              {geo.partial > 0 && points[geo.partial - 1].value !== null ? (
+                <Line
+                  x1={geo.x(geo.partial - 1)}
+                  y1={geo.y(points[geo.partial - 1].value as number)}
+                  x2={geo.x(geo.partial)}
+                  y2={geo.y(points[geo.partial].value as number)}
+                  stroke={color}
+                  strokeWidth={2}
+                  strokeDasharray={[3, 4]}
+                  strokeLinecap="round"
+                  opacity={0.7}
+                />
+              ) : null}
+              {geo.partial >= 0 ? (
+                <Circle
+                  cx={geo.x(geo.partial)}
+                  cy={geo.y(points[geo.partial].value as number)}
+                  r={4.5}
+                  fill={p.card}
+                  stroke={color}
+                  strokeWidth={2}
+                />
+              ) : null}
+              {dot >= 0 && !points[dot].partial ? (
                 <Circle cx={geo.x(dot)} cy={geo.y(points[dot].value as number)} r={5} fill={color} stroke={p.card} strokeWidth={2.5} />
               ) : null}
             </Svg>
@@ -179,7 +204,7 @@ export function TrendChart({
                 disabled={pt.value === null}
                 onPress={() => setSelectedKey((k) => (k === pt.key ? null : pt.key))}
                 accessibilityRole="button"
-                accessibilityLabel={`${pointLabel(pt, bucket)}, ${formatValue(pt.value)} ${unit}`}
+                accessibilityLabel={`${pointLabel(pt, bucket)}, ${formatAmount(pt.value, unit)}`}
                 accessibilityState={{ selected: selected?.key === pt.key }}
                 className="absolute top-0"
                 style={{ left: geo.x(i) - geo.hit / 2, width: geo.hit, height: geo.plotBottom }}

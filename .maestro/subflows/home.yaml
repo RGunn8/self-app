@@ -1,0 +1,21 @@
+# Back to the Identities tab from anywhere: deep link home, accept iOS's "Open in…?" prompt,
+# and close the dev-client menu if it's showing.
+appId: com.ryangunn.identitydashboard
+---
+- openLink: identity:///
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+- runFlow:
+    when:
+      visible: "Runtime version.*"
+    commands:
+      - tapOn: "Close"
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
+- waitForAnimationToEnd

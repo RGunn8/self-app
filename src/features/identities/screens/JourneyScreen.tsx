@@ -4,7 +4,7 @@ import { Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { useIdentityView } from '@/features/identities/views';
-import { formatValue, periodLabel, yearlyAverages } from '@/features/metrics/domain';
+import { formatAmount, formatValue, periodLabel, yearlyAverages } from '@/features/metrics/domain';
 import { Card, NavHeader, Row, Screen } from '@/shared/components/ui';
 import { fmt, today } from '@/shared/lib/dates';
 import { useData } from '@/shared/store/data';
@@ -72,7 +72,7 @@ export default function JourneyScreen() {
                 <Row
                   key={y.year}
                   className="gap-3"
-                  accessibilityLabel={`${y.year}: ${formatValue(y.value)} ${metric.unit} per ${metric.period}`}>
+                  accessibilityLabel={`${y.year}: ${formatAmount(y.value, metric.unit)} per ${metric.period}`}>
                   <Text className="font-body-semibold text-label text-ink w-[84px]">
                     {y.year}
                     {y.ytd ? ' · YTD' : ''}

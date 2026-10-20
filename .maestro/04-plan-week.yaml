@@ -1,0 +1,18 @@
+# The week planner: days per system, prefilled from history.
+appId: com.ryangunn.identitydashboard
+---
+- runFlow: subflows/home.yaml
+- tapOn: "Today, tab, 2 of 4"
+- extendedWaitUntil:
+    visible: "Plan week"
+    timeout: 5000
+- tapOn: "Plan week"
+- extendedWaitUntil:
+    visible: "Plan the week"
+    timeout: 5000
+- takeScreenshot: 04-plan-week
+- scrollUntilVisible:
+    element: "Wind-down"
+    direction: DOWN
+- takeScreenshot: 04b-plan-week-scrolled
+- tapOn: "Cancel"

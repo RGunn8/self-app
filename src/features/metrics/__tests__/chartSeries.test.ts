@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { calendarMonths, chartSeries, chartWindow, type EntryPoint, type MetricDef } from '@/features/metrics/domain';
+import { calendarMonths, chartSeries, chartWindow, type EntryPoint, formatAmount, type MetricDef } from '@/features/metrics/domain';
 
 // A Wednesday.
 const asOf = '2026-09-23';
@@ -106,5 +106,22 @@ describe('calendarMonths', () => {
 
   it('is empty with no entries', () => {
     expect(calendarMonths(m(), [], asOf).months).toEqual([]);
+  });
+});
+
+describe('the current week', () => {
+  it('is flagged partial on weekly totals, so it doesn’t read as a drop', () => {
+    const s = chartSeries(m(), [e('2026-09-14', 10), e('2026-09-21', 2)], '3M', asOf);
+    expect(s.points[12]).toMatchObject({ value: 2, partial: true });
+    expect(s.points[11].partial).toBeUndefined();
+  });
+});
+
+describe('formatAmount', () => {
+  it('drops a trailing .0 and puts currency first', () => {
+    expect(formatAmount(3, 'runs')).toBe('3 runs');
+    expect(formatAmount(3.6, 'mi')).toBe('3.6 mi');
+    expect(formatAmount(173, '$')).toBe('$173');
+    expect(formatAmount(null, '$')).toBe('–');
   });
 });
