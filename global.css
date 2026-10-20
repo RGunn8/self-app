@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Palette as RGB triplets. Mirrors the light/dark Palette in src/shared/theme/index.ts; edit both together. */
+:root {
+  --bg: 245 246 248;
+  --surface: 236 238 241;
+  --card: 255 255 255;
+  --card-raised: 238 240 243;
+  --ink: 24 24 27;
+  --muted: 92 93 95;
+  --divider: 24 24 27;
+  --accent: 198 113 57;
+  --accent-pressed: 178 98 45;
+  --accent-text: 140 73 26;
+  --on-accent: 255 255 255;
+  --positive: 86 99 63;
+  --selected: 65 66 69;
+  --on-selected: 255 255 255;
+  --field: 255 255 255;
+  --field-border: 182 183 186;
+  --chip: 238 240 243;
+}
+
+.dark:root {
+  --bg: 20 20 22;
+  --surface: 28 28 31;
+  --card: 42 43 45;
+  --card-raised: 46 46 51;
+  --ink: 255 255 255;
+  --muted: 182 183 186;
+  --divider: 250 250 250;
+  --accent: 214 127 72;
+  --accent-pressed: 246 160 107;
+  --accent-text: 246 160 107;
+  --on-accent: 20 20 22;
+  --positive: 174 191 146;
+  --selected: 238 240 243;
+  --on-selected: 42 43 45;
+  --field: 46 46 51;
+  --field-border: 92 93 95;
+  --chip: 46 46 51;
+}

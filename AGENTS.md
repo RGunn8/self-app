@@ -27,6 +27,22 @@ Run lint and typecheck before declaring any task done.
 
 - Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
 - Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
+- Route files are one-line re-exports (`export { default } from '@/features/<feature>/screens/<Screen>'`). `_layout.tsx` files stay in `src/app/`.
+
+## Project structure
+
+- `src/features/<feature>/` owns everything for one feature: `model.ts` (Drizzle tables + row types), `repo.ts` (all writes), `domain.ts` (pure logic), `views.ts` (derived read hooks), stores, `components/`, `screens/`, `__tests__/`.
+- `src/shared/` holds code used across features: `components/` (ui, charts, toast), `db/` (client, migrations, seed; `schema.ts` only re-exports each feature's `model.ts`), `lib/dates.ts`, `store/data.ts` (the snapshot), `theme/`.
+- New tables go in the owning feature's `model.ts` and must be re-exported from `src/shared/db/schema.ts`.
+
+## Styling
+
+- Style with NativeWind (v4, Tailwind v3) `className`. Tokens live in `tailwind.config.js`; themed colors (`bg-card`, `text-ink`, `text-muted`, `border-field-border`, …) are CSS variables in `global.css`, switched by `colorScheme.set()` from the Appearance setting.
+- Keep the light/dark values in `global.css` in sync with the `Palette` in `src/shared/theme/index.ts` (still used for icon colors, charts and other runtime values).
+- Use inline `style` only for runtime values: safe-area insets, identity accent colors, chart geometry, shadows (`elevation.*`), and Reanimated `Animated.*` views.
+- Use React Native's `Text` / `TextInput` directly with type-scale classes: a font (`font-heading`, `font-body`, `font-body-semibold`, `font-body-bold`), a size (`text-display-sm`, `text-label`, `text-caption`, …) and a color (`text-ink`, `text-muted`, …). Don't combine two classes for the same property (e.g. `text-label text-[15px]`); NativeWind picks by stylesheet order, not written order.
+- Use `cx()` for conditional classes and `withDefaults()` when a component's default classes can be overridden.
+- Third-party components need `cssInterop` registration in `src/shared/lib/nativewind.ts` before `className` works on them.
 - Docs: https://docs.expo.dev/router/introduction.md
 
 ## Building with EAS
