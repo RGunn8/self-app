@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-import { useTheme } from '@/theme';
+import { useTheme } from '@/shared/theme';
 
 export default function OnboardingLayout() {
   const p = useTheme();

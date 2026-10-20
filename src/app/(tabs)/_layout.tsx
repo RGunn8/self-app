@@ -1,13 +1,14 @@
 import { Redirect, Tabs } from 'expo-router';
-import { Lightbulb, Scale, UserRound } from 'lucide-react-native';
+import { Lightbulb, Scale, Sun, UserRound } from 'lucide-react-native';
 
-import { ICON_STROKE } from '@/components/ui';
-import { useSettings } from '@/stores/settings';
-import { useTheme } from '@/theme';
+import { useSettings } from '@/features/settings/useSettings';
+import { ICON_STROKE } from '@/shared/components/ui';
+import { useTheme } from '@/shared/theme';
 
 export default function TabLayout() {
   const p = useTheme();
   const onboarded = useSettings((s) => s.onboardedAt !== null);
+  const planning = useSettings((s) => s.planningEnabled);
   if (!onboarded) return <Redirect href="/onboarding" />;
 
   return (
@@ -23,6 +24,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{ title: 'Identities', tabBarIcon: ({ color }) => <UserRound color={color} size={22} strokeWidth={ICON_STROKE} /> }}
+      />
+      <Tabs.Screen
+        name="today"
+        options={{ href: planning ? undefined : null, title: 'Today', tabBarIcon: ({ color }) => <Sun color={color} size={22} strokeWidth={ICON_STROKE} /> }}
       />
       <Tabs.Screen
         name="balance"

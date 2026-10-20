@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
 import { useEffect } from 'react';
 
-import { useCreateDraft } from '@/stores/createDraft';
-import { useTheme } from '@/theme';
+import { useCreateDraft } from '@/features/identities/createDraft';
+import { useTheme } from '@/shared/theme';
 
 export default function CreateLayout() {
   const p = useTheme();
